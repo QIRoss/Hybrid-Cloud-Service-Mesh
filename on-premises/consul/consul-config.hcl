@@ -1,4 +1,4 @@
-datacenter = "cloud"
+datacenter = "on-premises"
 data_dir = "/consul/data"
 bind_addr = "0.0.0.0"
 client_addr = "0.0.0.0"
