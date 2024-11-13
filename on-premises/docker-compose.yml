@@ -1,0 +1,54 @@
+services:
+  consul:
+    image: consul:1.14.6
+    container_name: consul-server
+    ports:
+      - "8500:8500"
+      - "8301:8301"
+    volumes:
+      - ./consul/consul-config.hcl:/consul/config/consul-config.hcl
+    command: "agent -dev -config-file=/consul/config/consul-config.hcl"
+
+  service_a:
+    build:
+      context: ./service_a
+    container_name: service_a
+    environment:
+      - CONSUL_URL=http://consul-server:8500
+      - SERVICE_HOST=service_a
+      - SERVICE_PORT=8001
+      - SERVICE_ID=service_a
+    ports:
+      - "8001:8001"
+    depends_on:
+      - consul
+
+  service_b:
+    build:
+      context: ./service_b
+    container_name: service_b
+    environment:
+      - CONSUL_URL=http://consul-server:8500
+      - SERVICE_HOST=service_b
+      - SERVICE_PORT=8002
+      - SERVICE_ID=service_b
+    ports:
+      - "8002:8002"
+    depends_on:
+      - consul
+      - service_a
+
+  service_f:
+    build:
+      context: ./service_f
+    container_name: service_f
+    environment:
+      - CONSUL_URL=http://consul-server:8500
+      - SERVICE_HOST=service_f
+      - SERVICE_PORT=8003
+      - SERVICE_ID=service_f
+    ports:
+      - "8003:8003"
+    depends_on:
+      - consul
+      - service_a

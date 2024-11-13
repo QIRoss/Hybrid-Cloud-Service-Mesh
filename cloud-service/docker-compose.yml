@@ -1,0 +1,82 @@
+services:
+  consul-cloud:
+    image: consul:1.14.6
+    container_name: consul-cloud-server
+    ports:
+      - "8500:8500"
+      - "8301:8301"
+    environment:
+      - CONSUL_BIND_INTERFACE=eth0
+    volumes:
+      - ./consul/consul-config.hcl:/consul/config/consul-config.hcl
+    command: "agent -dev -config-file=/consul/config/consul-config.hcl"
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: "512M"
+
+  cloud_service_c:
+    build:
+      context: ./service_c
+    container_name: service_c
+    ports:
+      - "9001:9001"
+    environment:
+      - CONSUL_URL=http://consul-cloud-server:8500
+      - SERVICE_HOST=cloud_service_c
+      - SERVICE_PORT=9001
+      - SERVICE_ID=cloud_service_c
+    depends_on:
+      - consul-cloud
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: "256M"
+
+  cloud_service_d:
+    build:
+      context: ./service_d
+    ports:
+      - "9002:9002"
+    environment:
+      - CONSUL_URL=http://consul-cloud-server:8500
+      - SERVICE_HOST=cloud_service_d
+      - SERVICE_PORT=9002
+      - SERVICE_ID=cloud_service_d
+    depends_on:
+      - consul-cloud
+      - cloud_service_c
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: "256M"
+
+  cloud_service_e:
+    build:
+      context: ./service_e
+    ports:
+      - "9003:9003"
+    environment:
+      - CONSUL_URL=http://consul-cloud-server:8500
+      - SERVICE_HOST=cloud_service_e
+      - SERVICE_PORT=9003
+      - SERVICE_ID=cloud_service_e
+    depends_on:
+      - consul-cloud
+      - cloud_service_c
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: "256M"
+
+networks:
+  default:
+    driver: bridge
